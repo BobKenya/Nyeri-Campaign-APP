@@ -25,6 +25,29 @@ async def lifespan(app: FastAPI):
     # Create all tables on startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    # Auto-create admin user if none exists
+    try:
+        from app.database import async_session
+        from app.models.auth import User
+        from app.utils.security import hash_password
+        from sqlalchemy import select, func
+        import uuid
+        async with async_session() as db:
+            count = (await db.execute(select(func.count()).select_from(User))).scalar()
+            if count == 0:
+                admin = User(
+                    user_id=str(uuid.uuid4()),
+                    email="admin@nyericampaign.co.ke",
+                    full_name="System Administrator",
+                    hashed_password=hash_password("ChangeMe2026!"),
+                    role="admin",
+                    is_active=True,
+                )
+                db.add(admin)
+                await db.commit()
+                print("Admin user auto-created")
+    except Exception as e:
+        print(f"Admin seed failed: {e}")
     print(f"  {settings.APP_NAME} running at http://127.0.0.1:8000")
     print(f"  Swagger docs at http://127.0.0.1:8000/docs")
     print(f"  Database: nyeri_campaign.db (SQLite)")
