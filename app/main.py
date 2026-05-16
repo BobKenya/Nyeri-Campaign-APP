@@ -28,19 +28,29 @@ async def lifespan(app: FastAPI):
     # Auto-create admin user if none exists
     try:
         from app.database import async_session
-        from app.models.auth import User
+        from app.models.auth import User, Role
         from app.utils.security import hash_password
         from sqlalchemy import select, func
         import uuid
         async with async_session() as db:
             count = (await db.execute(select(func.count()).select_from(User))).scalar()
             if count == 0:
+                # Create admin role
+                admin_role = Role(
+                    role_id=str(uuid.uuid4()),
+                    role_name="admin",
+                    role_description="System Administrator",
+                    permissions_json={"all": True},
+                )
+                db.add(admin_role)
+                await db.flush()
+                # Create admin user
                 admin = User(
                     user_id=str(uuid.uuid4()),
                     email="admin@nyericampaign.co.ke",
                     full_name="System Administrator",
-                    hashed_password=hash_password("ChangeMe2026!"),
-                    role="admin",
+                    password_hash=hash_password("ChangeMe2026!"),
+                    role_id=admin_role.role_id,
                     is_active=True,
                 )
                 db.add(admin)
