@@ -58,6 +58,36 @@ async def lifespan(app: FastAPI):
                 print("Admin user auto-created")
     except Exception as e:
         print(f"Admin seed failed: {e}")
+    
+    # Auto-seed Nyeri constituencies and wards
+    try:
+        from app.database import async_session
+        from app.models.voters import Constituency, Ward
+        from sqlalchemy import select, func
+        import uuid
+        
+        WARDS_DATA = {
+            "Kieni": ["Mweiga", "Naromoru/Kiamathaga", "Mwiyogo/Endarasha", "Mountain Lodge", "Gakawa", "Thegu River", "Kabaru"],
+            "Mathira": ["Iriaini", "Konyu", "Kirimukuyu", "Magutu", "Mathira West", "Karatina Town"],
+            "Mukurweini": ["Gikondi", "Rugi", "Mukurweini Central", "Mukurweini West"],
+            "Nyeri Town": ["Kiganjo/Mathari", "Rware", "Gatitu/Muruguru", "Kamakwa/Mukaro", "Ruring'u"],
+            "Othaya": ["Mahiga", "Iria-ini", "Chinga", "Karima"],
+            "Tetu": ["Dedan Kimathi", "Wamagana", "Aguthi-Gaaki"],
+        }
+        async with async_session() as db:
+            count = (await db.execute(select(func.count()).select_from(Constituency))).scalar()
+            if count == 0:
+                for c_name, wards in WARDS_DATA.items():
+                    c = Constituency(constituency_id=str(uuid.uuid4()), constituency_name=c_name, county_name="Nyeri")
+                    db.add(c)
+                    await db.flush()
+                    for w_name in wards:
+                        w = Ward(ward_id=str(uuid.uuid4()), ward_name=w_name, constituency_id=c.constituency_id)
+                        db.add(w)
+                await db.commit()
+                print(f"Seeded 6 constituencies and 30 wards")
+    except Exception as e:
+        print(f"Geo seed failed: {e}")
     print(f"  {settings.APP_NAME} running at http://127.0.0.1:8000")
     print(f"  Swagger docs at http://127.0.0.1:8000/docs")
     print(f"  Database: nyeri_campaign.db (SQLite)")
