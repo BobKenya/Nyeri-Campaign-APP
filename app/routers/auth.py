@@ -127,6 +127,26 @@ async def update_me(
     return current_user
 
 
+@router.post("/change-password")
+async def change_password(
+    body: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Change current user's password"""
+    old_password = body.get("old_password")
+    new_password = body.get("new_password")
+    if not old_password or not new_password:
+        raise HTTPException(status_code=400, detail="old_password and new_password required")
+    if not verify_password(old_password, current_user.password_hash):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    current_user.password_hash = hash_password(new_password)
+    await db.commit()
+    return {"message": "Password changed successfully"}
+
+
 @router.post("/2fa/enable")
 async def enable_2fa(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     secret = generate_totp_secret()
