@@ -9,6 +9,7 @@ from app.database import engine, Base
 # Import ALL models so tables are registered
 from app.models import auth, voters, operations, messaging_finance, intel_election, tracking, benefits, meetings as meetings_models, donors as donors_models  # noqa
 
+from app.routers import sms
 from app.routers import (
     budgets as budgets_router,
     suppliers as suppliers_router,
@@ -126,6 +127,7 @@ app.include_router(analytics.router,      prefix="/api/v1/analytics",    tags=["
 app.include_router(tracking.router,       prefix="/api/v1/tracking",     tags=["Tracking & Intelligence"])
 app.include_router(benefits.router,       prefix="/api/v1/benefits",     tags=["Benefits Distribution"])
 app.include_router(meetings.router,       prefix="/api/v1/meetings",     tags=["Meetings & Scheduling"])
+app.include_router(sms.router, prefix="/api/v1/sms", tags=["SMS Broadcast"])
 app.include_router(donors.router,         prefix="/api/v1/donors",       tags=["Donors & Fundraising"])
 
 

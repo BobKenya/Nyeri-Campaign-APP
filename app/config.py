@@ -3,6 +3,9 @@ from pydantic_settings import BaseSettings
 import json, os
 
 class Settings(BaseSettings):
+    AT_USERNAME: str = "sandbox"
+    AT_API_KEY: str = "atsk_7927eb27d29833c0880a43b4d65ace90d280117706372d5c6ccebb605fdc81c19fe0a450"
+    AT_SENDER_ID: str = "AFRICASTKNG"
     DATABASE_URL: str = "sqlite+aiosqlite:///./nyeri_campaign.db"
     JWT_SECRET_KEY: str = "dev-secret-replace-in-production-with-64-char-hex"
     JWT_ALGORITHM: str = "HS256"

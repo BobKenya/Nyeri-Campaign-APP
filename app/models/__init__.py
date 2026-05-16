@@ -9,3 +9,5 @@ from . import suppliers
 from . import budgets
 
 # This ensures all models are registered with SQLAlchemy Base
+
+from app.models import sms
